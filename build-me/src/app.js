@@ -86,6 +86,26 @@ app.patch('/api/notes/:id', async (req, res) => {
     }
 });
 
+// ---- Delete note ----
+app.delete('/api/notes/:id', async (req, res) => {
+    try {
+        // ---- User provided data ----
+        const { id } = req.params;
 
+        // ---- Deleting note from database ----
+        const noteDelete = await Note.findByIdAndDelete(id);
+
+        // ---- validation ----
+        if (!noteDelete) return res.status(404).json({ message: "Note not found" });
+
+        return res.status(200).json({ message: "Note deleted successfully" });
+
+    } catch (error) {
+        console.log("Error in Delete note:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
 
 export default app;
