@@ -3,7 +3,43 @@ import { Note } from './models/note.model.js';
 
 const app = express();
 app.use(express.json());
+app.use(cookies());
 
+
+// ---- Regsiter user ----
+app.post("/api/auth/register", async (req, res) => {
+    try {
+        const { name, email } = req.body;
+
+        // ---- Validation ----
+        if (!name) return res.status(400).json({ message: "Name is required" });
+        if (!email) return res.status(400).json({ message: "Email is required" });
+        if (name.trim().length < 3) return res.status(400).json({ message: "Name must be at least 3 characters long" });
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return res.status(400).json({ message: "Invalid email format" });
+
+        // ---- Create the user ----
+        const newUser = await userModel.create({ name, email });
+
+        // ---- Create token ----
+        const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET);
+
+        res.cookie("token", token)
+
+        return res.status(201).json({
+            message: "User registered successfully",
+            user: newUser
+        });
+    } catch (error) {
+        console.log("Error in Regsiter user:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+
+
+});
 
 // ---- Create note ----
 app.post('/api/notes', async (req, res) => {
