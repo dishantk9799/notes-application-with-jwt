@@ -1,5 +1,6 @@
 import express from 'express';
 import { Note } from './models/note.model.js';
+import { User } from './models/user.model.js';
 
 const app = express();
 app.use(express.json());
@@ -20,7 +21,7 @@ app.post("/api/auth/register", async (req, res) => {
         if (!emailRegex.test(email)) return res.status(400).json({ message: "Invalid email format" });
 
         // ---- Create the user ----
-        const newUser = await userModel.create({ name, email });
+        const newUser = await User.create({ name, email });
 
         // ---- Create token ----
         const token = jwt.sign({ id: newUser._id, email: newUser.email }, process.env.JWT_SECRET);
@@ -48,8 +49,11 @@ app.post('/api/notes', async (req, res) => {
         // ---- User provided data ----
         const { title, description } = req.body;
 
+        // ---- verify token  ----
         const token = req.cookies.token;
         const user = jwt.verify(token, process.env.JWT_SECRET);
+
+        req.user = user;
 
         // ---- Validation ----
         if (!title) return res.status(400).json({ message: "title is required" });
@@ -58,7 +62,7 @@ app.post('/api/notes', async (req, res) => {
         if (description.trim().length < 10) return res.status(400).json({ message: "description should be more then 10 character" });
 
         // ---- Creating note ----
-        const newNote = await Note.create({ title, description });
+        const newNote = await Note.create({ title, description, user: req.user.email });
 
         return res.status(201).json({
             message: "Note created successfully",
