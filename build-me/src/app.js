@@ -37,5 +37,20 @@ app.post('/api/notes', async (req, res) => {
     }
 });
 
+// ---- Read note ----
+app.get('/api/notes', async (req, res) => {
+    try {
+        // ---- Find all note from the database ----
+        const note = await Note.find();
+
+        return res.status(200).json({ note });
+
+    } catch (error) {
+        console.log("Error in Read note:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
 
 export default app;
